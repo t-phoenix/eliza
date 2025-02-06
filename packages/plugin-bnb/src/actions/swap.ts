@@ -9,7 +9,7 @@ import {
     type State,
 } from "@elizaos/core";
 import { executeRoute, getRoutes } from "@lifi/sdk";
-import { parseEther } from "viem";
+import { erc20Abi, parseEther } from "viem";
 
 import {
     bnbWalletProvider,
@@ -32,7 +32,39 @@ export class SwapAction {
         console.log("Swap: ", params.chain, " From Token: ", params.fromToken, " To Token: ", params.toToken, " Amount: ", params.amount)
 
         const fromAddress = this.walletProvider.getAddress();
+
+        await this.walletProvider.switchChain(params.chain);
         const chainId = this.walletProvider.getChainConfigs(params.chain).id;
+        const nativeToken = this.walletProvider.chains[params.chain].nativeCurrency.symbol;
+        console.log("Chain Id: ", chainId, " Native Token: ", nativeToken);
+
+        //Get token Address and Handle Native Token
+        const fromTokenAddressInput = params.fromToken === nativeToken 
+            ? "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" 
+            : await this.walletProvider.getTokenAddress(params.chain, params.fromToken);
+        const toTokenAddressInput = params.toToken === nativeToken 
+            ? "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" 
+            : await this.walletProvider.getTokenAddress(params.chain, params.toToken);
+        console.log("From Token Address: ", params.fromToken, " : ", fromTokenAddressInput, " To Token Address: ", params.toToken, " : ", toTokenAddressInput);
+
+         // Calculate amount based on token decimals
+        let fromAmountInput: string;
+        if (params.fromToken ===  nativeToken) {
+            fromAmountInput = parseEther(params.amount).toString();
+        } else {
+
+            const publicClient = this.walletProvider.getPublicClient(
+                params.chain
+            );
+            const decimals = await publicClient.readContract({
+                address: fromTokenAddressInput as `0x${string}`,
+                abi: erc20Abi,
+                functionName: "decimals",
+            });            
+            fromAmountInput = (BigInt(Math.floor(parseFloat(params.amount) * Math.pow(10, decimals)))).toString();
+        }
+
+        console.log("From Amount Input: ", fromAmountInput, ": ", params.fromToken);
 
         this.walletProvider.configureLiFiSdk(params.chain);
 
@@ -44,17 +76,19 @@ export class SwapAction {
             amount: params.amount,
         };
 
+        console.log("Slippage: ", params.slippage);
+
         const routes = await getRoutes({
             fromChainId: chainId,
             toChainId: chainId,
-            fromTokenAddress: params.fromToken,
-            toTokenAddress: params.toToken,
-            fromAmount: parseEther(params.amount).toString(),
-            fromAddress: fromAddress,
-            options: {
-                slippage: params.slippage,
-                order: "RECOMMENDED",
-            },
+            fromTokenAddress: fromTokenAddressInput as `0x${string}`, // Setup Address
+            toTokenAddress: toTokenAddressInput as `0x${string}`, // Setup Address
+            fromAmount: fromAmountInput, // Setup for ERC and Native
+            fromAddress: fromAddress as `0x${string}`,
+            // options: {
+            //     slippage: params.slippage === null ? 0.005 : params.slippage,
+            //     order: "RECOMMENDED",
+            // },
         });
 
         if (!routes.routes.length) throw new Error("No routes found");
