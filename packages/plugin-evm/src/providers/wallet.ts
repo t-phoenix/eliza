@@ -32,6 +32,7 @@ import NodeCache from "node-cache";
 import * as path from "node:path";
 
 import type { SupportedChain } from "../types";
+import { createConfig, EVM } from "@lifi/sdk";
 
 export class WalletProvider {
     private cache: NodeCache;
@@ -107,6 +108,31 @@ export class WalletProvider {
 
         return chain;
     }
+
+    // configureLiFiSdk(chainName: SupportedChain) {
+    //     const chains = Object.values(this.chains);
+    //     const walletClient = this.getWalletClient(chainName);
+
+    //     createConfig({
+    //         integrator: "eliza",
+    //         providers: [
+    //             EVM({
+    //                 getWalletClient: async () => walletClient,
+    //                     const chain = chains.find((c) => c.id === chainId);
+    //                     if (!chain) {
+    //                         throw new Error(`Chain with id ${chainId} not found`);
+    //                     }
+    //                     return createWalletClient({
+    //                         account: this.account,
+    //                         chain,
+    //                         transport: http()
+    //                     });
+    //                 }
+
+    //             }),
+    //         ],
+    //     });
+    // }
 
     async getWalletBalance(): Promise<string | null> {
         const cacheKey = `walletBalance_${this.currentChain}`;

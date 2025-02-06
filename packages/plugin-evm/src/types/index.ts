@@ -36,6 +36,21 @@ export interface TokenWithBalance {
     valueUSD: string;
 }
 
+// Balance 
+export interface BalanceParams {
+    chain: SupportedChain;
+    token:  string; // Token address or "ETH" for native tokens
+    address: Address; // Wallet address
+}
+
+export interface BalanceResponse {
+    balance: string; // Balance in wei or token units
+    token:  string; // Token address or "ETH"
+    chain: SupportedChain; // Blockchain network
+    address: Address; // Wallet address
+}
+
+
 export interface WalletBalance {
     chain: SupportedChain;
     address: Address;

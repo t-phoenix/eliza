@@ -1,6 +1,11 @@
 import type { Address, Hash } from "viem";
+import * as viemChains from "viem/chains";
 
-export type SupportedChain = "bsc" | "bscTestnet" | "opBNB" | "opBNBTestnet";
+const _SupportedChainList = Object.keys(viemChains) as Array<
+    keyof typeof viemChains
+>;
+
+export type SupportedChain = (typeof _SupportedChainList)[number]
 export type StakeAction = "deposit" | "withdraw" | "claim";
 
 // Action parameters

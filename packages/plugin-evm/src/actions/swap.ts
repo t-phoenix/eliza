@@ -1,4 +1,4 @@
-import type { IAgentRuntime, Memory, State } from "@elizaos/core";
+import type { Action, IAgentRuntime, Memory, State } from "@elizaos/core";
 import {
     composeContext,
     generateObjectDeprecated,
@@ -345,7 +345,7 @@ export class SwapAction {
     }
 }
 
-export const swapAction = {
+export const swapAction: Action = {
     name: "swap",
     description: "Swap tokens on the same chain",
     handler: async (
@@ -400,7 +400,6 @@ export const swapAction = {
             return false;
         }
     },
-    template: swapTemplate,
     validate: async (runtime: IAgentRuntime) => {
         const privateKey = runtime.getSetting("EVM_PRIVATE_KEY");
         return typeof privateKey === "string" && privateKey.startsWith("0x");

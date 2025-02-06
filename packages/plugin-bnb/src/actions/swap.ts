@@ -26,8 +26,10 @@ export class SwapAction {
 
     async swap(params: SwapParams): Promise<SwapResponse> {
         elizaLogger.debug("Swap params:", params);
-        this.validateAndNormalizeParams(params);
+        // this.validateAndNormalizeParams(params);
         elizaLogger.debug("Normalized swap params:", params);
+
+        console.log("Swap: ", params.chain, " From Token: ", params.fromToken, " To Token: ", params.toToken, " Amount: ", params.amount)
 
         const fromAddress = this.walletProvider.getAddress();
         const chainId = this.walletProvider.getChainConfigs(params.chain).id;

@@ -34,24 +34,23 @@ export class GetBalanceAction {
         elizaLogger.debug("Normalized get balance params:", params);
 
         const { chain, address, token } = params;
+        console.log("Get BALANCE for : Token: ", token, " Address: ", address, " Chain: ", chain)
         if (!address) {
             throw new Error("Address is required for getting balance");
         }
 
         this.walletProvider.switchChain(chain);
-        const nativeSymbol =
-            this.walletProvider.getChainConfigs(chain).nativeCurrency.symbol;
+        const nativeSymbol = this.walletProvider.getChainConfigs(chain).nativeCurrency.symbol;
         const chainId = this.walletProvider.getChainConfigs(chain).id;
 
+
         let queryNativeToken = false;
-        if (
-            !token ||
-            token === "" ||
-            token.toLowerCase() === "bnb" ||
-            token.toLowerCase() === "tbnb"
-        ) {
+        if (!params.token || params.token === nativeSymbol) {
             queryNativeToken = true;
         }
+
+        console.log("Native Symbol: ", nativeSymbol, " Query Native Token (T/F): ", queryNativeToken)
+
 
         const resp: GetBalanceResponse = {
             chain,
@@ -60,6 +59,7 @@ export class GetBalanceAction {
 
         // If ERC20 token is requested
         if (!queryNativeToken) {
+            console.log("Querying ERC20 Token: ", params.token)
             let amount: string;
             if (token.startsWith("0x")) {
                 amount = await this.getERC20TokenBalance(
@@ -68,11 +68,11 @@ export class GetBalanceAction {
                     token as `0x${string}`
                 );
             } else {
-                if (chainId !== 56) {
-                    throw new Error(
-                        "Only BSC mainnet is supported for querying balance by token symbol"
-                    );
-                }
+                // if (chainId !== 56) {
+                //     throw new Error(
+                //         "Only BSC mainnet is supported for querying balance by token symbol"
+                //     );
+                // }
 
                 this.walletProvider.configureLiFiSdk(chain);
                 const tokenInfo = await getToken(chainId, token);
@@ -86,6 +86,7 @@ export class GetBalanceAction {
             resp.balance = { token, amount };
         } else {
             // If native token is requested
+            console.log("Querying Native Token: ", nativeSymbol, "Chain: ", chain)
             const nativeBalanceWei = await this.walletProvider
                 .getPublicClient(chain)
                 .getBalance({ address });

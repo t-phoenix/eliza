@@ -30,7 +30,7 @@ import type { SupportedChain } from "../types";
 
 export class WalletProvider {
     private currentChain: SupportedChain = "bsc";
-    chains: Record<string, Chain> = { bsc: viemChains.bsc };
+    chains: Record<string, Chain> = { ...viemChains };
     account: PrivateKeyAccount;
 
     constructor(privateKey: `0x${string}`, chains?: Record<string, Chain>) {
@@ -298,11 +298,19 @@ export class WalletProvider {
 const genChainsFromRuntime = (
     runtime: IAgentRuntime
 ): Record<string, Chain> => {
-    const chainNames = ["bsc", "bscTestnet", "opBNB", "opBNBTestnet"];
+    const chainNames = (runtime.character?.settings?.chains?.evm as SupportedChain[]) || [];
     const chains = {};
 
     for (const chainName of chainNames) {
         const chain = WalletProvider.genChainFromName(chainName);
+        chains[chainName] = chain;
+    }
+
+    for (const chainName of chainNames) {
+        const rpcUrl = runtime.getSetting(
+            `ETHEREUM_PROVIDER_${chainName.toUpperCase()}`
+        );
+        const chain = WalletProvider.genChainFromName(chainName, rpcUrl);
         chains[chainName] = chain;
     }
 
